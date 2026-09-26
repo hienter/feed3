@@ -34,14 +34,14 @@ final class FeedingTests: XCTestCase {
     func testFinishedDurationValueAfterEnd() {
         var feeding = Feeding(type: .pumpLeft, startedAt: date(500))
         feeding.endedAt = date(200)
-        XCTAssertEqual(feeding.finishedDurationSeconds, 300, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(feeding.finishedDurationSeconds), 300, accuracy: 0.001)
         XCTAssertFalse(feeding.isActive)
     }
 
     func testNegativeDurationClampedToZero() {
         // 이상 데이터: 종료가 시작보다 앞 — 음수가 되지 않아야 함
         let feeding = Feeding(type: .breastLeft, startedAt: date(100), endedAt: date(200))
-        XCTAssertEqual(feeding.finishedDurationSeconds, 0, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(feeding.finishedDurationSeconds), 0, accuracy: 0.001)
         XCTAssertEqual(feeding.durationSeconds, 0, accuracy: 0.001)
     }
 
