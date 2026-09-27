@@ -13,6 +13,8 @@ struct FormulaSheet: View {
 
     @State private var amountML: Int = 0
     @State private var textValue: String = ""
+    @State private var recordDate: Date = Date()
+    @State private var isCustomDate = false
 
     private var currentBaby: Baby? {
         Baby.current(from: babies, appStorage: currentBabyID)
@@ -50,6 +52,24 @@ struct FormulaSheet: View {
                 Text("ml")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+
+                // 기록 날짜: 기본 '지금'. 토글하면 이전 날짜/시각 지정 가능.
+                VStack(spacing: 8) {
+                    Toggle("다른 날짜로 기록", isOn: $isCustomDate.animation())
+                        .font(.subheadline)
+                        .tint(Color.feed3Accent)
+                    if isCustomDate {
+                        DatePicker(
+                            "날짜·시각",
+                            selection: $recordDate,
+                            in: ...Date.now,
+                            displayedComponents: [.date, .hourAndMinute]
+                        )
+                        .datePickerStyle(.compact)
+                        .font(.subheadline)
+                    }
+                }
+                .padding(.horizontal, 20)
 
                 Spacer()
 
@@ -99,8 +119,8 @@ struct FormulaSheet: View {
     }
 
     private func save() {
-        let now = Date()
-        let feeding = Feeding(type: .formula, startedAt: now, endedAt: now, amountML: amountML, baby: currentBaby)
+        let date = isCustomDate ? recordDate : Date()
+        let feeding = Feeding(type: .formula, startedAt: date, endedAt: date, amountML: amountML, baby: currentBaby)
         modelContext.insert(feeding)
         lastFormulaML = amountML
         try? modelContext.save()
