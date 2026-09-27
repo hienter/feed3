@@ -1,10 +1,12 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct Feed3App: App {
     var body: some Scene {
         WindowGroup {
-            Text("Feed3")
+            HomeView()
         }
+        .modelContainer(for: [Feeding.self, Baby.self])
     }
 }
