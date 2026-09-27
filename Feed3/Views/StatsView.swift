@@ -2,6 +2,14 @@ import SwiftUI
 import SwiftData
 import Charts
 
+/// 시간대 히스토그램 막대 데이터 (타입 체커 부하 감소용 사전 계산 모델)
+private struct HourBar {
+    let hour: Int
+    let count: Int
+    let floor: Double
+    let opacity: Double
+}
+
 /// 통계 뷰: 주간 막대(횟수 + ml 오버레이), 시간대 히스토그램, 오늘 요약 카드.
 struct StatsView: View {
     @Query(sort: \Feeding.startedAt, order: .reverse) private var feedings: [Feeding]
@@ -146,20 +154,23 @@ struct StatsView: View {
     private var hourChart: some View {
         let histogram = histogram
         let maxCount = max(1, histogram.values.max() ?? 1)
+        // 미리 계산한 데이터 모델로 단순화 — 타입 체커 부하 제거
+        let bars: [HourBar] = (0..<24).map { hour in
+            let count = histogram[hour, default: 0]
+            let opacity: Double = count == 0 ? 0.08 : 0.25 + 0.75 * Double(count) / Double(maxCount)
+            return HourBar(hour: hour, count: count, floor: count == 0 ? 0.02 : 0, opacity: opacity)
+        }
         return VStack(alignment: .leading, spacing: 8) {
             Text("시간대 분포")
                 .font(.system(.headline, design: .rounded))
                 .foregroundStyle(.secondary)
-            Chart {
-                ForEach(0..<24, id: \.self) { hour in
-                    let count = histogram[hour, default: 0]
-                    BarMark(
-                        x: .value("시간", hour),
-                        y: .value("횟수", max(count, 0.02))
-                    )
-                    .foregroundStyle(Color.feed3Accent.opacity(count == 0 ? 0.08 : 0.25 + 0.75 * Double(count) / Double(maxCount)))
-                    .cornerRadius(2)
-                }
+            Chart(bars, id: \.hour) { bar in
+                BarMark(
+                    x: .value("시간", bar.hour),
+                    y: .value("횟수", bar.count > 0 ? bar.count : bar.floor)
+                )
+                .foregroundStyle(Color.feed3Accent.opacity(bar.opacity))
+                .cornerRadius(2)
             }
             .chartXAxis {
                 AxisMarks(values: [0, 6, 12, 18, 23]) { value in
