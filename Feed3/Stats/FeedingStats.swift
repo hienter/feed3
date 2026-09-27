@@ -114,4 +114,63 @@ enum FeedingStats {
         // 자정을 걸친 수유(시작은 어제, 종료는 오늘)는 "종료 시점" 기준으로 귀속
         return interval.contains(endedAt)
     }
+
+    // MARK: - dayKey / totalMlPerDay / daySectionHeader (타임라인 일자별 그룹핑)
+
+    /// 캘린더 날짜(자정 기준)별 그룹핑 키. "2026-09-27" 형태.
+    static func dayKey(
+        _ date: Date,
+        calendar: Calendar = .current
+    ) -> String {
+        let start = calendar.startOfDay(for: date)
+        let comps = calendar.dateComponents([.year, .month, .day], from: start)
+        return String(format: "%04d-%02d-%02d", comps.year ?? 0, comps.month ?? 0, comps.day ?? 0)
+    }
+
+    /// 일자(dayKey)별 총 ml. dailySummary와 동일 규칙:
+    /// - 종료 시점 기준 귀속(자정 걸친 수유 포함), 진행 중 제외
+    /// - formula는 ml 합산, 유축은 ml 있으면 합산, 모유(분만)는 ml 불포함
+    /// - 기록이 있는 날만 키로 생성 (빈 날은 키 없음)
+    static func totalMlPerDay(
+        _ feedings: [Feeding],
+        calendar: Calendar = .current
+    ) -> [String: Double] {
+        var result: [String: Double] = [:]
+        for feeding in feedings {
+            guard let endedAt = feeding.endedAt else { continue } // 진행 중 제외
+            let key = dayKey(endedAt, calendar: calendar)
+            let ml: Double
+            switch feeding.type {
+            case .formula:
+                ml = Double(feeding.amountML ?? 0)
+            case .breastLeft, .breastRight, .pumpLeft, .pumpRight:
+                ml = feeding.amountML.map(Double.init) ?? 0
+            }
+            result[key, default: 0] += ml
+        }
+        return result
+    }
+
+    /// 타임라인 섹션 헤더 문자열.
+    /// 오늘 = "오늘 · 9월 27일(일)", 어제 = "어제 · 9월 26일(토)", 그 외 = "9월 25일(금)".
+    static func daySectionHeader(
+        _ day: Date,
+        now: Date,
+        calendar: Calendar = .current
+    ) -> String {
+        let formatter = DateFormatter()
+        formatter.calendar = calendar
+        formatter.timeZone = calendar.timeZone
+        formatter.locale = Locale(identifier: "ko_KR")
+        formatter.dateFormat = "M월 d일(E)"
+
+        let today = calendar.startOfDay(for: now)
+        let dayStart = calendar.startOfDay(for: day)
+        let days = calendar.dateComponents([.day], from: dayStart, to: today).day ?? 0
+
+        let dateText = formatter.string(from: dayStart)
+        if days == 0 { return "오늘 · \(dateText)" }
+        if days == 1 { return "어제 · \(dateText)" }
+        return dateText
+    }
 }

@@ -234,4 +234,83 @@ final class FeedingStatsTests: XCTestCase {
         let gap = FeedingStats.lastFeedingGap(feedings, now: now)
         XCTAssertEqual(gap!, -3600, accuracy: 0.5)
     }
+
+    // MARK: - dayKey / totalMlPerDay / daySectionHeaders
+
+    func testDayKeyGroupsByCalendarDayMidnightBoundary() {
+        // 자정 전후 10분은 서로 다른 dayKey
+        let beforeMidnight = dayAt(2026, 9, 25, 23, 50)
+        let afterMidnight = dayAt(2026, 9, 26, 0, 10)
+        XCTAssertNotEqual(
+            FeedingStats.dayKey(beforeMidnight, calendar: calendar),
+            FeedingStats.dayKey(afterMidnight, calendar: calendar)
+        )
+        // 같은 날 같은 키
+        XCTAssertEqual(
+            FeedingStats.dayKey(beforeMidnight, calendar: calendar),
+            FeedingStats.dayKey(dayAt(2026, 9, 25, 12), calendar: calendar)
+        )
+    }
+
+    func testTotalMlPerDayEmptyInput() {
+        XCTAssertTrue(FeedingStats.totalMlPerDay([], calendar: calendar).isEmpty)
+    }
+
+    func testTotalMlPerDayAggregatesFormulaAndPumpML() {
+        let feedings = [
+            feeding(.formula, start: dayAt(2026, 9, 26, 9), end: dayAt(2026, 9, 26, 9, 10), ml: 80),
+            feeding(.formula, start: dayAt(2026, 9, 26, 15), end: dayAt(2026, 9, 26, 15, 10), ml: 120),
+            feeding(.pumpLeft, start: dayAt(2026, 9, 26, 13), end: dayAt(2026, 9, 26, 13, 30), ml: 60),
+            feeding(.breastLeft, start: dayAt(2026, 9, 26, 6), end: dayAt(2026, 9, 26, 6, 20)), // ml 없음
+            feeding(.formula, start: dayAt(2026, 9, 25, 20), end: dayAt(2026, 9, 25, 20, 10), ml: 100),
+        ]
+        let perDay = FeedingStats.totalMlPerDay(feedings, calendar: calendar)
+        // 모유(분만)는 totalML 불포함 — dailySummary 로직과 동일
+        XCTAssertEqual(perDay[FeedingStats.dayKey(dayAt(2026, 9, 26), calendar: calendar)], 260)
+        XCTAssertEqual(perDay[FeedingStats.dayKey(dayAt(2026, 9, 25), calendar: calendar)], 100)
+        XCTAssertEqual(perDay.count, 2)
+    }
+
+    func testTotalMlPerDayMidnightCrossingGoesToEndDay() {
+        // 자정 걸친 수유는 종료일에 귀속 (isFeed와 동일)
+        let feedings = [
+            feeding(.formula, start: dayAt(2026, 9, 25, 23, 50), end: dayAt(2026, 9, 26, 0, 10), ml: 40),
+        ]
+        let perDay = FeedingStats.totalMlPerDay(feedings, calendar: calendar)
+        XCTAssertEqual(perDay[FeedingStats.dayKey(dayAt(2026, 9, 26), calendar: calendar)], 40)
+        XCTAssertNil(perDay[FeedingStats.dayKey(dayAt(2026, 9, 25), calendar: calendar)])
+    }
+
+    func testTotalMlPerDayExcludesActiveFeeding() {
+        let feedings = [
+            feeding(.formula, start: dayAt(2026, 9, 26, 9), end: nil, ml: 50),
+        ]
+        let perDay = FeedingStats.totalMlPerDay(feedings, calendar: calendar)
+        XCTAssertEqual(perDay[FeedingStats.dayKey(dayAt(2026, 9, 26), calendar: calendar)], 0)
+    }
+
+    func testDaySectionHeaderTodayYesterdayAndPlain() {
+        // today = 2026-09-27(일)
+        let today = dayAt(2026, 9, 27, 10)
+        XCTAssertEqual(
+            FeedingStats.daySectionHeader(today, now: dayAt(2026, 9, 27, 15), calendar: calendar),
+            "오늘 · 9월 27일(일)"
+        )
+        XCTAssertEqual(
+            FeedingStats.daySectionHeader(dayAt(2026, 9, 26, 10), now: today, calendar: calendar),
+            "어제 · 9월 26일(토)"
+        )
+        XCTAssertEqual(
+            FeedingStats.daySectionHeader(dayAt(2026, 9, 25, 10), now: today, calendar: calendar),
+            "9월 25일(금)"
+        )
+    }
+
+    func testDaySectionHeaderMonthBoundary() {
+        // 10월 4일(일) — 월이 바뀌어도 'M월 d일(E)' 형식 유지
+        XCTAssertEqual(
+            FeedingStats.daySectionHeader(dayAt(2026, 10, 4, 10), now: dayAt(2026, 10, 8, 10), calendar: calendar),
+            "10월 4일(일)"
+        )
+    }
 }

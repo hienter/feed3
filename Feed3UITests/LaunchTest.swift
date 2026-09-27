@@ -99,6 +99,14 @@ final class LaunchTest: XCTestCase {
         ).firstMatch
         let rowFound = byIdentifier.waitForExistence(timeout: 12) || byPredicate.exists
         XCTAssertTrue(rowFound, "저장 후 타임라인에 새 기록이 표시되지 않음")
+
+        // 5) 일자별 그룹핑: 오늘 섹션 헤더에 일일 요약('총') 문구가 노출되는지 확인.
+        //    identifier는 헤더 HStack에 부여됨 (Section에 붙이면 자식 identifier가 덮어짐 — cfa1dd9)
+        let header = app.otherElements["daySectionHeader"].firstMatch
+        let headerFound = header.waitForExistence(timeout: 8)
+            || app.staticTexts["daySectionHeader"].firstMatch.exists
+            || app.cells.containing(NSPredicate(format: "label CONTAINS %@", "총")).firstMatch.exists
+        XCTAssertTrue(headerFound, "오늘 섹션 헤더(일일 요약)가 표시되지 않음")
     }
 
     /// 건너뛰기 경로: 두번째 페이지에서 '건너뛰기' → 아기 폼 없이 바로 홈(분유 버튼 노출).

@@ -169,7 +169,7 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - 타임라인 (오늘/어제/그제 섹션 + 스와이프 수정/삭제)
+    // MARK: - 타임라인 (일자별 그룹핑 섹션 + 스와이프 수정/삭제)
 
     private var timeline: some View {
         let sections = daySections
@@ -185,28 +185,47 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
-                    ForEach(sections, id: \.title) { section in
+                    ForEach(sections, id: \.day) { section in
                         Section {
-                            ForEach(section.feedings, id: \.id) { feeding in
-                                TimelineRow(feeding: feeding, now: now)
-                                    .accessibilityIdentifier("timelineRow")
-                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                        // 삭제: 확인 다이얼로그 없이 즉시 — 속도가 정체성
-                                        Button(role: .destructive) {
-                                            delete(feeding)
-                                        } label: {
-                                            Label("삭제", systemImage: "trash")
+                            if section.isEmpty {
+                                Text("기록 없음")
+                                    .font(.footnote)
+                                    .foregroundStyle(.tertiary)
+                            } else {
+                                ForEach(section.feedings, id: \.id) { feeding in
+                                    TimelineRow(feeding: feeding, now: now)
+                                        .accessibilityIdentifier("timelineRow")
+                                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                            // 삭제: 확인 다이얼로그 없이 즉시 — 속도가 정체성
+                                            Button(role: .destructive) {
+                                                delete(feeding)
+                                            } label: {
+                                                Label("삭제", systemImage: "trash")
+                                            }
+                                            Button {
+                                                editing = feeding
+                                            } label: {
+                                                Label("수정", systemImage: "pencil")
+                                            }
+                                            .tint(Color.feed3Accent)
                                         }
-                                        Button {
-                                            editing = feeding
-                                        } label: {
-                                            Label("수정", systemImage: "pencil")
-                                        }
-                                        .tint(Color.feed3Accent)
-                                    }
+                                }
                             }
                         } header: {
-                            Text(section.title)
+                            HStack {
+                                Text(section.title)
+                                    .font(.system(.subheadline, design: .serif).weight(.bold))
+                                Spacer()
+                                if let summary = section.summaryText {
+                                    Text(summary)
+                                        .font(.caption.weight(.semibold))
+                                        .monospacedDigit()
+                                        .foregroundStyle(Color.feed3Accent)
+                                }
+                            }
+                            // Section 자체가 아닌 헤더 HStack에 식별자를 부여한다.
+                            // (Section에 붙이면 자식 identifier가 덮어지는 cfa1dd9 교훈)
+                            .accessibilityIdentifier("daySectionHeader")
                         }
                     }
                 }
@@ -217,29 +236,67 @@ struct HomeView: View {
     }
 
     struct DaySection {
+        let day: Date              // 자정
         let title: String
-        let feedings: [Feeding]
+        let feedings: [Feeding]    // 최신순
+        let isEmpty: Bool
+        let summaryText: String?   // "총 820ml · 6건" (빈 날은 nil)
     }
 
-    /// 최근 3일(오늘/어제/그제) 섹션. 각 섹션은 최신순.
+    /// 일자별 섹션. 그룹 내 최신순, 그룹은 최근 날짜부터.
+    /// 기록 없는 날은 '기록 없음' 섹션으로 표시하되, 최근 7일 범위에서
+    /// 기록 있는 마지막 날~오늘 사이의 빈 날만.
     private var daySections: [DaySection] {
         let calendar = Calendar.current
-        let titles = ["오늘", "어제", "그제"]
-        var sections: [DaySection] = []
-        for (offset, title) in titles.enumerated() {
-            guard let day = calendar.date(byAdding: .day, value: -offset, to: now) else { continue }
-            let start = calendar.startOfDay(for: day)
-            guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { continue }
-            // 종료 시점 기준으로 귀속(자정 걸친 수유 포함). 진행 중은 시작 시점 기준.
-            let inDay = feedings.filter { feeding in
-                if feeding.isActive { return feeding.startedAt >= start && feeding.startedAt < end }
-                guard let endedAt = feeding.endedAt else { return false }
-                return endedAt >= start && endedAt < end
-            }
-            if !inDay.isEmpty {
-                sections.append(DaySection(title: title, feedings: inDay))
-            }
+        let today = calendar.startOfDay(for: now)
+
+        // 종료 시점 기준 귀속(자정 걸친 수유 포함). 진행 중은 시작 시점 기준.
+        func dayOf(_ feeding: Feeding) -> Date {
+            let reference = feeding.isActive ? feeding.startedAt : (feeding.endedAt ?? feeding.startedAt)
+            return calendar.startOfDay(for: reference)
         }
+
+        let grouped = Dictionary(grouping: feedings, by: dayOf)
+        let mlPerDay = FeedingStats.totalMlPerDay(feedings, calendar: calendar)
+
+        var sections: [DaySection] = []
+        for day in grouped.keys.sorted(by: >) {
+            let inDay = (grouped[day] ?? []).sorted { $0.startedAt > $1.startedAt }
+            let key = FeedingStats.dayKey(day, calendar: calendar)
+            let ml = mlPerDay[key] ?? 0
+            let summary = String(format: "총 %.0fml · %d건", ml, inDay.count)
+            sections.append(
+                DaySection(
+                    day: day,
+                    title: FeedingStats.daySectionHeader(day, now: now, calendar: calendar),
+                    feedings: inDay,
+                    isEmpty: false,
+                    summaryText: summary
+                )
+            )
+        }
+
+        // 빈 날: 기록 있는 마지막 날~오늘 사이 (최근 7일로 제한)
+        let windowStart = calendar.date(byAdding: .day, value: -6, to: today) ?? today
+        if let lastActiveDay = grouped.keys.max(), lastActiveDay < today {
+            var day = calendar.date(byAdding: .day, value: -1, to: today)
+            while let current = day, current >= max(lastActiveDay, windowStart) {
+                if grouped[current] == nil {
+                    sections.append(
+                        DaySection(
+                            day: current,
+                            title: FeedingStats.daySectionHeader(current, now: now, calendar: calendar),
+                            feedings: [],
+                            isEmpty: true,
+                            summaryText: nil
+                        )
+                    )
+                }
+                day = calendar.date(byAdding: .day, value: -1, to: current)
+            }
+            sections.sort { $0.day > $1.day }
+        }
+
         return sections
     }
 
