@@ -96,7 +96,6 @@ struct BabyFormSheet: View {
                     )
                     .accessibilityIdentifier("birthDatePicker")
                 }
-                .accessibilityIdentifier("onboardingForm")
 
                 Button {
                     save()
