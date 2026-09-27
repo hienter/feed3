@@ -67,3 +67,6 @@ final class Feeding {
     /// 진행 중(종료되지 않음) 여부
     var isActive: Bool { endedAt == nil }
 }
+
+/// sheet(item:) 프레젠테이션용
+extension Feeding: Identifiable {}

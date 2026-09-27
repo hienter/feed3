@@ -8,6 +8,7 @@ struct HomeView: View {
     @State private var now = Date()
     @State private var showTimerSheet = false
     @State private var showFormulaSheet = false
+    @State private var editing: Feeding?
 
     private var activeFeeding: Feeding? {
         feedings.first(where: \.isActive)
@@ -48,6 +49,9 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showFormulaSheet) {
             FormulaSheet()
+        }
+        .sheet(item: $editing) { feeding in
+            RecordEditSheet(feeding: feeding)
         }
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { date in
             now = date
@@ -96,15 +100,15 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - 오늘 타임라인
+    // MARK: - 타임라인 (오늘/어제/그제 섹션 + 스와이프 수정/삭제)
 
     private var timeline: some View {
-        let todayFeedings = todayList
+        let sections = daySections
         return Group {
-            if todayFeedings.isEmpty {
+            if sections.isEmpty {
                 VStack(spacing: 8) {
                     Spacer()
-                    Text("오늘 기록이 없습니다")
+                    Text("기록이 없습니다")
                         .font(.subheadline)
                         .foregroundStyle(.tertiary)
                     Spacer()
@@ -112,12 +116,28 @@ struct HomeView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List {
-                    Section {
-                        ForEach(todayFeedings, id: \.id) { feeding in
-                            TimelineRow(feeding: feeding, now: now)
+                    ForEach(sections, id: \.title) { section in
+                        Section {
+                            ForEach(section.feedings, id: \.id) { feeding in
+                                TimelineRow(feeding: feeding, now: now)
+                                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                        // 삭제: 확인 다이얼로그 없이 즉시 — 속도가 정체성
+                                        Button(role: .destructive) {
+                                            delete(feeding)
+                                        } label: {
+                                            Label("삭제", systemImage: "trash")
+                                        }
+                                        Button {
+                                            editing = feeding
+                                        } label: {
+                                            Label("수정", systemImage: "pencil")
+                                        }
+                                        .tint(Color.feed3Accent)
+                                    }
+                            }
+                        } header: {
+                            Text(section.title)
                         }
-                    } header: {
-                        Text("오늘")
                     }
                 }
                 .listStyle(.insetGrouped)
@@ -126,10 +146,36 @@ struct HomeView: View {
         }
     }
 
-    private var todayList: [Feeding] {
+    struct DaySection {
+        let title: String
+        let feedings: [Feeding]
+    }
+
+    /// 최근 3일(오늘/어제/그제) 섹션. 각 섹션은 최신순.
+    private var daySections: [DaySection] {
         let calendar = Calendar.current
-        let start = calendar.startOfDay(for: now)
-        return feedings.filter { $0.startedAt >= start || ($0.endedAt.map { $0 >= start } ?? false) }
+        let titles = ["오늘", "어제", "그제"]
+        var sections: [DaySection] = []
+        for (offset, title) in titles.enumerated() {
+            guard let day = calendar.date(byAdding: .day, value: -offset, to: now) else { continue }
+            let start = calendar.startOfDay(for: day)
+            guard let end = calendar.date(byAdding: .day, value: 1, to: start) else { continue }
+            // 종료 시점 기준으로 귀속(자정 걸친 수유 포함). 진행 중은 시작 시점 기준.
+            let inDay = feedings.filter { feeding in
+                if feeding.isActive { return feeding.startedAt >= start && feeding.startedAt < end }
+                guard let endedAt = feeding.endedAt else { return false }
+                return endedAt >= start && endedAt < end
+            }
+            if !inDay.isEmpty {
+                sections.append(DaySection(title: title, feedings: inDay))
+            }
+        }
+        return sections
+    }
+
+    private func delete(_ feeding: Feeding) {
+        modelContext.delete(feeding)
+        try? modelContext.save()
     }
 
     // MARK: - 하단 3버튼
