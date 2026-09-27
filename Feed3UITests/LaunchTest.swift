@@ -102,25 +102,29 @@ final class LaunchTest: XCTestCase {
     }
 
     /// 건너뛰기 경로: 두번째 페이지에서 '건너뛰기' → 아기 폼 없이 바로 홈(분유 버튼 노출).
+    /// 앞 테스트(testOnboardingAndFormulaRecordFlow)가 온보딩을 완료했을 수 있으므로
+    /// 앱을 삭제해 신규 설치 상태로 복원한 뒤 실행한다(WelcomeView가 반드시 떠야 함).
     func testOnboardingSkipGoesStraightHome() throws {
         let app = XCUIApplication()
+        app.delete()
         app.launch()
 
         let nextButton = app.buttons["welcomeNextButton"]
-        let alreadyHome = app.buttons["formulaButton"].waitForExistence(timeout: 5)
-        if !alreadyHome {
-            XCTAssertTrue(nextButton.waitForExistence(timeout: 10), "WelcomeView 진입 실패")
-            // 1페이지엔 건너뛰기 없음 → 다음으로
-            nextButton.tap()
-        }
+        XCTAssertTrue(nextButton.waitForExistence(timeout: 15), "WelcomeView 진입 실패")
+
+        // 1페이지엔 건너뛰기 없음 → 다음으로
+        nextButton.tap()
 
         // 2페이지: 우상단 건너뛰기
         let skipButton = app.buttons["welcomeSkipButton"]
         XCTAssertTrue(skipButton.waitForExistence(timeout: 5), "건너뛰기 버튼 없음")
         skipButton.tap()
 
-        // 기본 아기로 바로 홈 진입 확인
+        // 기본 아기로 바로 홈 진입 확인 (아기 폼이 아닌 홈이 바로 떠야 한다)
+        let nameField = app.textFields["babyNameField"]
         let formulaButton = app.buttons["formulaButton"]
-        XCTAssertTrue(formulaButton.waitForExistence(timeout: 15), "건너뛰기 후 홈 진입 실패 — 분유 버튼 없음")
+        let homeReached = formulaButton.waitForExistence(timeout: 15)
+        XCTAssertFalse(nameField.exists, "건너뛰기 시 아기 등록 폼이 떠서는 안 됨")
+        XCTAssertTrue(homeReached, "건너뛰기 후 홈 진입 실패 — 분유 버튼 없음")
     }
 }
