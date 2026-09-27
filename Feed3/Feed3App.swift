@@ -5,6 +5,8 @@ import SwiftData
 struct Feed3App: App {
 
     /// CloudKit 자동 동기화 시도, 실패 시 로컬 전용 폴백.
+    /// - 이름 없는 ModelConfiguration을 써서 기본 default.store 위치를 유지한다
+    ///   (기존 데이터 호환 — 이름 있는 store는 새 파일이 되어 마이그레이션 발생).
     /// - 현재 배포 프로비저닝 프로파일에 iCloud capability가 없어 entitlements는
     ///   빈 dict로 유지한다(아카이브 실패 폴백, 2026-09 기준). iCloud capability가
     ///   추가되면 entitlements에 icloud-services(CloudKit)/containers(iCloud.hienter.feed3)를
@@ -14,11 +16,7 @@ struct Feed3App: App {
     private static func makeContainer() -> ModelContainer {
         let schema = Schema([Feeding.self, Baby.self])
         do {
-            let config = ModelConfiguration(
-                "Feed3",
-                schema: schema,
-                cloudKitDatabase: .automatic
-            )
+            let config = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
             return try ModelContainer(for: schema, configurations: [config])
         } catch {
             #if DEBUG
@@ -27,7 +25,7 @@ struct Feed3App: App {
             do {
                 return try ModelContainer(
                     for: schema,
-                    configurations: [ModelConfiguration("Feed3", schema: schema)]
+                    configurations: [ModelConfiguration(schema: schema)]
                 )
             } catch {
                 fatalError("Feed3: local SwiftData container init failed: \(error)")
