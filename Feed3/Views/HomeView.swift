@@ -146,6 +146,7 @@ struct HomeView: View {
                         Section {
                             ForEach(section.feedings, id: \.id) { feeding in
                                 TimelineRow(feeding: feeding, now: now)
+                                    .accessibilityIdentifier("timelineRow")
                                     .swipeActions(edge: .trailing, allowsFullSwipe: true) {
                                         // 삭제: 확인 다이얼로그 없이 즉시 — 속도가 정체성
                                         Button(role: .destructive) {

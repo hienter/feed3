@@ -40,6 +40,17 @@
                ReferencedContainer = "container:Feed3.xcodeproj">
             </BuildableReference>
          </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F3A000000000000000000033"
+               BuildableName = "Feed3UITests.xctest"
+               BlueprintName = "Feed3UITests"
+               ReferencedContainer = "container:Feed3.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

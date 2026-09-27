@@ -66,6 +66,7 @@ struct FormulaSheet: View {
                 .padding(.horizontal, 20)
                 .disabled(amountML < 10)
                 .opacity(amountML < 10 ? 0.4 : 1)
+                .accessibilityIdentifier("saveFormulaButton")
             }
             .padding(.vertical, 20)
             .background(Color.feed3Background)
