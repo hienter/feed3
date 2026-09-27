@@ -9,7 +9,7 @@ on:
 jobs:
   test:
     name: Build & Test (iOS Simulator)
-    runs-on: macos-26
+    runs-on: macos-15
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -22,8 +22,8 @@ jobs:
 
       - name: Boot simulator (warm-up)
         run: |
-          xcrun simctl boot "iPhone 17" 2>/dev/null || true
-          xcrun simctl bootstatus "iPhone 17" -b
+          xcrun simctl boot "iPhone 16" 2>/dev/null || true
+          xcrun simctl bootstatus "iPhone 16" -b
 
       - name: Run tests
         run: |
@@ -31,7 +31,7 @@ jobs:
           xcodebuild test \
             -project Feed3.xcodeproj \
             -scheme Feed3 \
-            -destination 'platform=iOS Simulator,name=iPhone 17' \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
             -parallel-testing-enabled NO \
             -retry-tests-on-failure \
             -test-iterations 3 \
