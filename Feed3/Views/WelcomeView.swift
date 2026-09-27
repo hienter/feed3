@@ -129,7 +129,7 @@ struct WelcomeView: View {
             HStack(spacing: 12) {
                 previewButton(title: "모유", icon: "figure.2.arms.open", type: .breastLeft)
                 previewButton(title: "분유", icon: "babybottle", type: .formula)
-                previewButton(title: "유축", icon: "drop.fill", type: .pump)
+                previewButton(title: "유축", icon: "drop.fill", type: .pumpLeft)
             }
             .padding(.horizontal, 8)
             Spacer()
