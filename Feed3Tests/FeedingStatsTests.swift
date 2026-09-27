@@ -282,11 +282,12 @@ final class FeedingStatsTests: XCTestCase {
     }
 
     func testTotalMlPerDayExcludesActiveFeeding() {
+        // 진행 중만 있는 날은 키 자체가 없음(nil) — UI에서 ?? 0 폴백으로 '총 0ml' 표시
         let feedings = [
             feeding(.formula, start: dayAt(2026, 9, 26, 9), end: nil, ml: 50),
         ]
         let perDay = FeedingStats.totalMlPerDay(feedings, calendar: calendar)
-        XCTAssertEqual(perDay[FeedingStats.dayKey(dayAt(2026, 9, 26), calendar: calendar)], 0)
+        XCTAssertNil(perDay[FeedingStats.dayKey(dayAt(2026, 9, 26), calendar: calendar)])
     }
 
     func testDaySectionHeaderTodayYesterdayAndPlain() {
