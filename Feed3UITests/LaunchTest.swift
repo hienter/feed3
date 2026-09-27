@@ -106,7 +106,7 @@ final class LaunchTest: XCTestCase {
     /// 앱을 삭제해 신규 설치 상태로 복원한 뒤 실행한다(WelcomeView가 반드시 떠야 함).
     func testOnboardingSkipGoesStraightHome() throws {
         let app = XCUIApplication()
-        app.delete()
+        app.launchArguments += ["-uitest-reset"]  // 신규 설치 상태 복원(이전 테스트가 온보딩 완료 상태로 남김)
         app.launch()
 
         let nextButton = app.buttons["welcomeNextButton"]

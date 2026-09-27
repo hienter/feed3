@@ -47,7 +47,32 @@ struct Feed3App: App {
     var body: some Scene {
         WindowGroup {
             HomeView()
+                .modelContainer(Self.sharedContainer)
+                .task {
+                    // UI 테스트용: XCUIApplication.delete()가 없는 환경에서
+                    // 신규 설치 상태를 재현하기 위한 리셋 런치 아규먼트.
+                    if ProcessInfo.processInfo.arguments.contains("-uitest-reset") {
+                        Self.resetForUITest(Self.sharedContainer)
+                    }
+                }
         }
-        .modelContainer(Self.makeContainer())
+    }
+
+    @MainActor
+    static let sharedContainer: ModelContainer = makeContainer()
+
+    /// 온보딩/기록/아기 데이터를 전부 지워 신규 설치와 동일한 상태로 만든다.
+    @MainActor
+    private static func resetForUITest(_ container: ModelContainer) {
+        let defaults = UserDefaults.standard
+        defaults.removeObject(forKey: Baby.onboardingCompletedKey)
+        defaults.removeObject(forKey: "homeTipShown")
+        defaults.removeObject(forKey: "currentBabyID")
+        let context = ModelContext(container)
+        let feedings = (try? context.fetch(FetchDescriptor<Feeding>())) ?? []
+        feedings.forEach(context.delete)
+        let babies = (try? context.fetch(FetchDescriptor<Baby>())) ?? []
+        babies.forEach(context.delete)
+        try? context.save()
     }
 }
