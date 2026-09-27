@@ -8,6 +8,10 @@ struct HomeView: View {
 
     @AppStorage(BabiesView.currentBabyIDKey) private var currentBabyID: String = ""
     @AppStorage(Baby.onboardingCompletedKey) private var onboardingCompleted = false
+    @AppStorage("homeTipShown") private var homeTipShown = false
+    @State private var welcomeShownOnce = false
+    @State private var showWelcome = false
+    @State private var showHomeTip = false
 
     @State private var now = Date()
     @State private var showTimerSheet = false
@@ -29,12 +33,25 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            // 첫 실행 온보딩: 아기가 0마리면 홈 대신 등록 폼(기록에 baby 연결 필요)
+            // 첫 실행 온보딩: 풀 온보딩(WelcomeView) → 아기 등록 폼 순. 건너뛰면 기본 아기 생성.
             if onboardingCompleted && !babies.isEmpty {
                 homeContent
+            } else if showWelcome {
+                Color.clear
             } else {
                 BabyFormSheet(isOnboarding: true)
+                    .onAppear { OnboardingEvent.log(.formViewed) }
             }
+        }
+        .fullScreenCover(isPresented: $showWelcome) {
+            WelcomeView(
+                onComplete: { showWelcome = false },
+                onSkip: {
+                    createDefaultBaby()
+                    onboardingCompleted = true
+                    showWelcome = false
+                }
+            )
         }
         .sheet(isPresented: $showTimerSheet) {
             TimerSheet()
@@ -47,6 +64,12 @@ struct HomeView: View {
         }
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { date in
             now = date
+        }
+        .onAppear {
+            if !onboardingCompleted && babies.isEmpty && !welcomeShownOnce {
+                welcomeShownOnce = true
+                showWelcome = true
+            }
         }
     }
 
@@ -80,7 +103,27 @@ struct HomeView: View {
             }
         }
         .safeAreaInset(edge: .bottom) {
-            actionButtons
+            VStack(spacing: 0) {
+                if showHomeTip && feedings.isEmpty {
+                    Text("버튼을 눌러 첫 기록을 남겨보세요")
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(Color.feed3Background)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.feed3Ink, in: Capsule())
+                        .padding(.bottom, 10)
+                        .transition(.opacity.combined(with: .move(edge: .bottom)))
+                        .accessibilityIdentifier("homeTip")
+                }
+                actionButtons
+            }
+        }
+        .onAppear {
+            // 온보딩 직후 한 번만 팁 표시. 기록이 생기면(showHomeTip && !feedings.isEmpty) 자동 소멸.
+            if !homeTipShown && feedings.isEmpty {
+                showHomeTip = true
+                homeTipShown = true
+            }
         }
     }
 
@@ -198,6 +241,14 @@ struct HomeView: View {
             }
         }
         return sections
+    }
+
+    /// 건너뛰기 경로: 기본 아기 '우리 아기'(생년월일=오늘) 생성 후 바로 홈.
+    private func createDefaultBaby() {
+        let baby = Baby(name: "우리 아기", birthDate: Date())
+        modelContext.insert(baby)
+        currentBabyID = baby.id.uuidString
+        try? modelContext.save()
     }
 
     private func delete(_ feeding: Feeding) {

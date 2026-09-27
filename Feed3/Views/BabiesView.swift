@@ -81,13 +81,13 @@ struct BabyFormSheet: View {
     @AppStorage(Baby.onboardingCompletedKey) private var onboardingCompleted = false
 
     @State private var name = ""
-    @State private var birthDate = Calendar.current.date(from: DateComponents(year: 2026, month: 1, day: 1)) ?? Date()
+    @State private var birthDate = Calendar.current.startOfDay(for: Date())
 
     var body: some View {
         NavigationStack {
             Form {
                 Section("아기 정보") {
-                    TextField("이름", text: $name)
+                    TextField("예) 우리 아기", text: $name)
                         .accessibilityIdentifier("babyNameField")
                     DatePicker(
                         "생년월일",
@@ -100,7 +100,7 @@ struct BabyFormSheet: View {
                 Button {
                     save()
                 } label: {
-                    Text("저장")
+                    Text("완료")
                         .font(.body.weight(.semibold))
                         .frame(maxWidth: .infinity)
                 }
@@ -126,6 +126,9 @@ struct BabyFormSheet: View {
         let baby = Baby(name: trimmed, birthDate: birthDate)
         modelContext.insert(baby)
         currentBabyID = baby.id.uuidString
+        if isOnboarding {
+            OnboardingEvent.log(.formCompleted)
+        }
         onboardingCompleted = true
         try? modelContext.save()
         dismiss()

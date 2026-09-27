@@ -31,7 +31,9 @@ final class LaunchTest: XCTestCase {
         var launched = false
         for _ in 0..<3 {
             app.launch()
-            if app.buttons["formulaButton"].waitForExistence(timeout: 15) || app.textFields["babyNameField"].waitForExistence(timeout: 15) {
+            if app.buttons["formulaButton"].waitForExistence(timeout: 15)
+                || app.buttons["welcomeNextButton"].waitForExistence(timeout: 5)
+                || app.textFields["babyNameField"].waitForExistence(timeout: 5) {
                 launched = true
                 break
             }
@@ -47,14 +49,27 @@ final class LaunchTest: XCTestCase {
         }
         XCTAssertTrue(launched, "3회 재시도 후에도 앱 런치 실패(시뮬레이터 인프라 문제)")
 
-        // 1) 온보딩: 아기가 0마리면 등록 폼이 먼저 뜬다. 이미 등록된 설치라면 건너뛴다.
+        // 1) 온보딩: WelcomeView(3페이지) → '다음' 2회 → '기록 시작하기' → 아기 등록 폼.
+        //    이미 온보딩이 끝난 설치(재실행)라면 건너뛴다.
+        let nextButton = app.buttons["welcomeNextButton"]
+        if nextButton.waitForExistence(timeout: 10) {
+            nextButton.tap()
+            nextButton.tap()
+            let startButton = app.buttons["welcomeNextButton"]
+            XCTAssertTrue(startButton.waitForExistence(timeout: 5), "시작 버튼 없음")
+            // 마지막 페이지에서 문구가 '기록 시작하기'로 바뀐다
+            XCTAssertTrue(startButton.label.contains("기록 시작하기"), "마지막 페이지 문구가 '기록 시작하기'가 아님: \(startButton.label)")
+            startButton.tap()
+        }
+
         let nameField = app.textFields["babyNameField"]
         if nameField.waitForExistence(timeout: 10) {
             nameField.tap()
             nameField.typeText("테스트")
-            // 생년월일은 기본값 그대로 사용
+            // 생년월일은 기본값(오늘) 그대로 사용
             let saveButton = app.buttons["saveBabyButton"]
             XCTAssertTrue(saveButton.waitForExistence(timeout: 5), "저장 버튼 없음")
+            XCTAssertEqual(saveButton.label, "완료", "저장 버튼 문구가 '완료'가 아님")
             saveButton.tap()
         }
 
@@ -84,5 +99,28 @@ final class LaunchTest: XCTestCase {
         ).firstMatch
         let rowFound = byIdentifier.waitForExistence(timeout: 12) || byPredicate.exists
         XCTAssertTrue(rowFound, "저장 후 타임라인에 새 기록이 표시되지 않음")
+    }
+
+    /// 건너뛰기 경로: 두번째 페이지에서 '건너뛰기' → 아기 폼 없이 바로 홈(분유 버튼 노출).
+    func testOnboardingSkipGoesStraightHome() throws {
+        let app = XCUIApplication()
+        app.launch()
+
+        let nextButton = app.buttons["welcomeNextButton"]
+        let alreadyHome = app.buttons["formulaButton"].waitForExistence(timeout: 5)
+        if !alreadyHome {
+            XCTAssertTrue(nextButton.waitForExistence(timeout: 10), "WelcomeView 진입 실패")
+            // 1페이지엔 건너뛰기 없음 → 다음으로
+            nextButton.tap()
+        }
+
+        // 2페이지: 우상단 건너뛰기
+        let skipButton = app.buttons["welcomeSkipButton"]
+        XCTAssertTrue(skipButton.waitForExistence(timeout: 5), "건너뛰기 버튼 없음")
+        skipButton.tap()
+
+        // 기본 아기로 바로 홈 진입 확인
+        let formulaButton = app.buttons["formulaButton"]
+        XCTAssertTrue(formulaButton.waitForExistence(timeout: 15), "건너뛰기 후 홈 진입 실패 — 분유 버튼 없음")
     }
 }
