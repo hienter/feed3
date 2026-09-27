@@ -8,6 +8,9 @@ private struct HourBar {
     let count: Int
     let floor: Double
     let opacity: Double
+
+    /// count가 0이면 바닥값(0.02)을, 아니면 count를 Double로 반환
+    var displayValue: Double { count > 0 ? Double(count) : floor }
 }
 
 /// 통계 뷰: 주간 막대(횟수 + ml 오버레이), 시간대 히스토그램, 오늘 요약 카드.
@@ -167,7 +170,7 @@ struct StatsView: View {
             Chart(bars, id: \.hour) { bar in
                 BarMark(
                     x: .value("시간", bar.hour),
-                    y: .value("횟수", bar.count > 0 ? bar.count : bar.floor)
+                    y: .value("횟수", bar.displayValue)
                 )
                 .foregroundStyle(Color.feed3Accent.opacity(bar.opacity))
                 .cornerRadius(2)
