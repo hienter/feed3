@@ -21,10 +21,17 @@ struct TimerSheet: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query private var feedings: [Feeding]
+    @Query private var babies: [Baby]
+
+    @AppStorage(BabiesView.currentBabyIDKey) private var currentBabyID: String = ""
 
     @State private var mode: Mode = .breast
     @State private var side: Side = .left
     @State private var now = Date()
+
+    private var currentBaby: Baby? {
+        Baby.current(from: babies, appStorage: currentBabyID)
+    }
 
     private var activeFeeding: Feeding? {
         feedings.first(where: \.isActive)
@@ -105,7 +112,7 @@ struct TimerSheet: View {
     }
 
     private func start() {
-        let feeding = Feeding(type: feedType, startedAt: Date(), endedAt: nil)
+        let feeding = Feeding(type: feedType, startedAt: Date(), endedAt: nil, baby: currentBaby)
         modelContext.insert(feeding)
         try? modelContext.save()
     }

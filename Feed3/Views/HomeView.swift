@@ -4,11 +4,20 @@ import SwiftData
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Feeding.startedAt, order: .reverse) private var feedings: [Feeding]
+    @Query(sort: \Baby.createdAt) private var babies: [Baby]
+
+    @AppStorage(BabiesView.currentBabyIDKey) private var currentBabyID: String = ""
+    @AppStorage(Baby.onboardingCompletedKey) private var onboardingCompleted = false
 
     @State private var now = Date()
     @State private var showTimerSheet = false
     @State private var showFormulaSheet = false
     @State private var editing: Feeding?
+
+    /// 현재 아기: @AppStorage의 UUID 문자열을 저장소와 대조. 없으면 nil(기록은 baby nil).
+    private var currentBaby: Baby? {
+        Baby.current(from: babies, appStorage: currentBabyID)
+    }
 
     private var activeFeeding: Feeding? {
         feedings.first(where: \.isActive)
@@ -20,28 +29,11 @@ struct HomeView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                header
-                timeline
-            }
-            .background(Color.feed3Background)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Text("수유3초")
-                        .font(.system(.headline, design: .serif).weight(.bold))
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink {
-                        StatsView()
-                    } label: {
-                        Image(systemName: "chart.bar")
-                    }
-                    .accessibilityLabel("통계")
-                }
-            }
-            .safeAreaInset(edge: .bottom) {
-                actionButtons
+            // 첫 실행 온보딩: 아기가 0마리면 홈 대신 등록 폼(기록에 baby 연결 필요)
+            if onboardingCompleted && !babies.isEmpty {
+                homeContent
+            } else {
+                BabyFormSheet(isOnboarding: true)
             }
         }
         .sheet(isPresented: $showTimerSheet) {
@@ -55,6 +47,40 @@ struct HomeView: View {
         }
         .onReceive(Timer.publish(every: 1, on: .main, in: .common).autoconnect()) { date in
             now = date
+        }
+    }
+
+    private var homeContent: some View {
+        VStack(spacing: 0) {
+            header
+            timeline
+        }
+        .background(Color.feed3Background)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Text("수유3초")
+                    .font(.system(.headline, design: .serif).weight(.bold))
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                HStack(spacing: 4) {
+                    NavigationLink {
+                        BabiesView()
+                    } label: {
+                        Image(systemName: "person.2")
+                    }
+                    .accessibilityIdentifier("babiesNav")
+                    NavigationLink {
+                        StatsView()
+                    } label: {
+                        Image(systemName: "chart.bar")
+                    }
+                    .accessibilityLabel("통계")
+                }
+            }
+        }
+        .safeAreaInset(edge: .bottom) {
+            actionButtons
         }
     }
 
@@ -182,13 +208,13 @@ struct HomeView: View {
 
     private var actionButtons: some View {
         HStack(spacing: 12) {
-            bigButton(title: "모유", icon: "figure.2.arms.open") {
+            bigButton(title: "모유", icon: "figure.2.arms.open", id: "breastButton") {
                 showTimerSheet = true
             }
-            bigButton(title: "분유", icon: "babybottle") {
+            bigButton(title: "분유", icon: "babybottle", id: "formulaButton") {
                 showFormulaSheet = true
             }
-            bigButton(title: "유축", icon: "drop.fill") {
+            bigButton(title: "유축", icon: "drop.fill", id: "pumpButton") {
                 showTimerSheet = true
             }
         }
@@ -198,7 +224,7 @@ struct HomeView: View {
         .background(.ultraThinMaterial)
     }
 
-    private func bigButton(title: String, icon: String, action: @escaping () -> Void) -> some View {
+    private func bigButton(title: String, icon: String, id: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 6) {
                 Image(systemName: icon)
@@ -211,6 +237,7 @@ struct HomeView: View {
         .buttonStyle(.plain)
         .background(Color.feed3Accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 18))
         .foregroundStyle(Color.feed3Accent)
+        .accessibilityIdentifier(id)
     }
 }
 

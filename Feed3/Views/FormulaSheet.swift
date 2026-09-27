@@ -8,9 +8,15 @@ struct FormulaSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     @AppStorage("lastFormulaML") private var lastFormulaML = 120
+    @AppStorage(BabiesView.currentBabyIDKey) private var currentBabyID: String = ""
+    @Query private var babies: [Baby]
 
     @State private var amountML: Int = 0
     @State private var textValue: String = ""
+
+    private var currentBaby: Baby? {
+        Baby.current(from: babies, appStorage: currentBabyID)
+    }
 
     var body: some View {
         NavigationStack {
@@ -93,7 +99,7 @@ struct FormulaSheet: View {
 
     private func save() {
         let now = Date()
-        let feeding = Feeding(type: .formula, startedAt: now, endedAt: now, amountML: amountML)
+        let feeding = Feeding(type: .formula, startedAt: now, endedAt: now, amountML: amountML, baby: currentBaby)
         modelContext.insert(feeding)
         lastFormulaML = amountML
         try? modelContext.save()
