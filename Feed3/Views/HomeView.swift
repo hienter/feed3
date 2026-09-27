@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Charts
 
 struct HomeView: View {
     @Environment(\.modelContext) private var modelContext
@@ -76,6 +77,7 @@ struct HomeView: View {
     private var homeContent: some View {
         VStack(spacing: 0) {
             header
+            trendCard
             timeline
         }
         .background(Color.feed3Background)
@@ -167,6 +169,79 @@ struct HomeView: View {
                 .padding(.vertical, 28)
             }
         }
+    }
+
+    // MARK: - 추세 카드 (최근 7일 수유량 꺾은선)
+
+    private var trendCard: some View {
+        let points = FeedingStats.weeklySeries(feedings, weeks: 1, calendar: .current)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("수유량 추세")
+                    .font(.system(.subheadline, design: .serif).weight(.bold))
+                    .foregroundStyle(Color.feed3Ink)
+                Spacer()
+                Text("최근 7일")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            Chart {
+                ForEach(points, id: \.day) { point in
+                    LineMark(
+                        x: .value("날짜", point.day, unit: .day),
+                        y: .value("ml", point.ml)
+                    )
+                    .foregroundStyle(Color.feed3Accent)
+                    .lineStyle(StrokeStyle(lineWidth: 2.5))
+                    .interpolationMethod(.catmullRom)
+                }
+                ForEach(points, id: \.day) { point in
+                    AreaMark(
+                        x: .value("날짜", point.day, unit: .day),
+                        y: .value("ml", point.ml)
+                    )
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color.feed3Accent.opacity(0.18), .clear],
+                            startPoint: .top, endPoint: .bottom
+                        )
+                    )
+                    .interpolationMethod(.catmullRom)
+                }
+                ForEach(points, id: \.day) { point in
+                    PointMark(
+                        x: .value("날짜", point.day, unit: .day),
+                        y: .value("ml", point.ml)
+                    )
+                    .foregroundStyle(Color.feed3Accent)
+                    .symbolSize(18)
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .trailing) { value in
+                    AxisValueLabel()
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .chartXAxis {
+                AxisMarks(values: .stride(by: .day)) { _ in
+                    AxisValueLabel(format: .dateTime.weekday(.narrow))
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(height: 120)
+            .accessibilityIdentifier("trendChart")
+        }
+        .padding(16)
+        .background(.white, in: RoundedRectangle(cornerRadius: 20))
+        .padding(.horizontal, 16)
+        .padding(.top, 8)
+        // 기록이 없으면 카드 자체를 숨김(빈 홈 유지)
+        .opacity(points.contains { $0.ml > 0 } ? 1 : 0)
+        .frame(maxHeight: points.contains { $0.ml > 0 } ? nil : 0)
+        .clipped()
     }
 
     // MARK: - 타임라인 (일자별 그룹핑 섹션 + 스와이프 수정/삭제)
@@ -313,40 +388,27 @@ struct HomeView: View {
         try? modelContext.save()
     }
 
-    // MARK: - 하단 3버튼
+    // MARK: - 하단 기록 버튼
 
     private var actionButtons: some View {
-        HStack(spacing: 12) {
-            bigButton(title: "모유", icon: "figure.2.arms.open", id: "breastButton") {
-                showTimerSheet = true
+        Button {
+            showFormulaSheet = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "babybottle")
+                    .font(.title3.weight(.semibold))
+                Text("수유 기록하기")
+                    .font(.system(.title3, design: .rounded).weight(.bold))
             }
-            bigButton(title: "분유", icon: "babybottle", id: "formulaButton") {
-                showFormulaSheet = true
-            }
-            bigButton(title: "유축", icon: "drop.fill", id: "pumpButton") {
-                showTimerSheet = true
-            }
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, minHeight: 60)
         }
+        .buttonStyle(.plain)
+        .background(Color.feed3Accent, in: RoundedRectangle(cornerRadius: 20))
         .padding(.horizontal, 16)
         .padding(.top, 12)
         .padding(.bottom, 8)
-        .background(.ultraThinMaterial)
-    }
-
-    private func bigButton(title: String, icon: String, id: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.title2)
-                Text(title)
-                    .font(.system(.body, design: .rounded).weight(.semibold))
-            }
-            .frame(maxWidth: .infinity, minHeight: 72)
-        }
-        .buttonStyle(.plain)
-        .background(Color.feed3Accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 18))
-        .foregroundStyle(Color.feed3Accent)
-        .accessibilityIdentifier(id)
+        .accessibilityIdentifier("formulaButton")
     }
 }
 
