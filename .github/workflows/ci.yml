@@ -35,8 +35,7 @@ jobs:
             -parallel-testing-enabled NO \
             -retry-tests-on-failure \
             -test-iterations 3 \
-            -resultBundlePath build/results.xcresult \
-            CODE_SIGNING_ALLOWED=NO | xcbeautify
+            -resultBundlePath build/results.xcresult | xcbeautify
 
       - name: Upload result bundle on failure
         if: failure()
