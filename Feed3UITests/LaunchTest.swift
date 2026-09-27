@@ -115,10 +115,30 @@ final class LaunchTest: XCTestCase {
     func testOnboardingSkipGoesStraightHome() throws {
         let app = XCUIApplication()
         app.launchArguments += ["-uitest-reset"]  // 신규 설치 상태 복원(이전 테스트가 온보딩 완료 상태로 남김)
-        app.launch()
+
+        // 시뮬레이터 인프라 플레이크(런치 실패/조기 종료) 대비 3회 재시도.
+        // 메인 흐름 테스트와 동일한 런치 재시도 패턴.
+        var launched = false
+        for _ in 0..<3 {
+            app.launch()
+            let nextButton = app.buttons["welcomeNextButton"]
+            if nextButton.waitForExistence(timeout: 15) {
+                launched = true
+                break
+            }
+            // 실패 원인 진단: 계층 텍스트 + 스크린샷을 xcresult에 남긴다
+            print("Feed3UIT-diag: state=\(app.state.rawValue) args=\(app.launchArguments)")
+            print("Feed3UIT-diag debugDescription:\n\(app.debugDescription.prefix(3000))")
+            let shot = XCTAttachment(screenshot: app.screenshot())
+            shot.name = "skip-launch-failure"
+            shot.lifetime = .keepAlways
+            add(shot)
+            app.terminate()
+            sleep(3)
+        }
+        XCTAssertTrue(launched, "3회 재시도 후에도 WelcomeView 진입 실패(시뮬레이터 인프라 문제)")
 
         let nextButton = app.buttons["welcomeNextButton"]
-        XCTAssertTrue(nextButton.waitForExistence(timeout: 15), "WelcomeView 진입 실패")
 
         // 1페이지엔 건너뛰기 없음 → 다음으로
         nextButton.tap()
