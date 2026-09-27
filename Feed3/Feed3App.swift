@@ -15,6 +15,17 @@ struct Feed3App: App {
     ///   앱의 모든 기능은 로컬 SwiftData로 정상 동작해야 한다(출시 블록 아님).
     private static func makeContainer() -> ModelContainer {
         let schema = Schema([Feeding.self, Baby.self])
+
+        // 신규 설치 시 Application Support 디렉토리가 없으면 addPersistentStore가
+        // "Failed to create file (code 2)"로 실패하며 앱이 런치 직후 죽는다.
+        // 컨테이너 생성 전에 디렉토리를 보장한다.
+        let supportDir = FileManager.default.urls(
+            for: .applicationSupportDirectory, in: .userDomainMask
+        ).first
+        if let dir = supportDir {
+            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        }
+
         do {
             let config = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
             return try ModelContainer(for: schema, configurations: [config])
