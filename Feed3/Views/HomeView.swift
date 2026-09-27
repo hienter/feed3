@@ -129,46 +129,82 @@ struct HomeView: View {
         }
     }
 
-    // MARK: - 상단: 마지막 수유 간격 / 진행중 수유
+    // MARK: - 상단 히어로: 마지막 수유 간격 + 오늘 요약 칩
+
+    private var todaySummary: FeedingStats.DailySummary {
+        FeedingStats.dailySummary(feedings, day: now, calendar: .current)
+    }
 
     private var header: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 14) {
             if let active = activeFeeding {
                 // 진행 중 수유: 앱 재시작 후에도 이어서 경과 표시
-                VStack(spacing: 4) {
+                VStack(spacing: 6) {
                     Text("지금 수유 중")
-                        .font(.caption.weight(.semibold))
+                        .font(.caption.weight(.bold))
                         .foregroundStyle(Color.feed3Accent)
+                        .textCase(.uppercase)
                     Text(Feed3Format.elapsedText(from: active.startedAt, to: now))
-                        .font(.system(size: 44, weight: .bold, design: .rounded))
+                        .font(.system(size: 52, weight: .heavy, design: .rounded))
                         .monospacedDigit()
+                        .foregroundStyle(Color.feed3Ink)
                     Text(Feed3Format.typeLabel(active.type))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
+                .padding(.vertical, 24)
             } else if let last = lastFinished {
-                VStack(spacing: 4) {
-                    Text("마지막 수유")
-                        .font(.caption)
+                VStack(spacing: 6) {
+                    Text("마지막 수유로부터")
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
+                        .tracking(0.5)
                     Text(Feed3Format.relativeGapText(from: last.endedAt ?? last.startedAt, to: now))
-                        .font(.system(size: 34, weight: .bold, design: .rounded))
+                        .font(.system(size: 44, weight: .heavy, design: .rounded))
                         .monospacedDigit()
+                        .foregroundStyle(Color.feed3Ink)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 4)
             } else {
                 VStack(spacing: 4) {
                     Text("첫 수유를 기록해 보세요")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(Color.feed3Ink)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 28)
             }
+
+            // 오늘 요약 칩: 총량 · 횟수 (기록 있을 때만)
+            if todaySummary.count > 0 {
+                HStack(spacing: 10) {
+                    summaryChip(value: "\(todaySummary.totalML)", unit: "ml", label: "오늘 총량")
+                    summaryChip(value: "\(todaySummary.count)", unit: "회", label: "오늘 횟수")
+                }
+            }
         }
+    }
+
+    private func summaryChip(value: String, unit: String, label: String) -> some View {
+        HStack(spacing: 6) {
+            Text(label)
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.secondary)
+            Spacer(minLength: 2)
+            Text(value)
+                .font(.system(.headline, design: .rounded).weight(.bold))
+                .monospacedDigit()
+                .foregroundStyle(Color.feed3Accent)
+            Text(unit)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.feed3Accent)
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color.feed3AccentTint, in: Capsule())
     }
 
     // MARK: - 추세 카드 (최근 7일 수유량 꺾은선)
@@ -235,7 +271,7 @@ struct HomeView: View {
             .accessibilityIdentifier("trendChart")
         }
         .padding(16)
-        .background(.white, in: RoundedRectangle(cornerRadius: 20))
+        .feed3Card()
         .padding(.horizontal, 16)
         .padding(.top, 8)
         // 기록이 없으면 카드 자체를 숨김(빈 홈 유지)

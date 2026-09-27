@@ -22,18 +22,20 @@ struct FormulaSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 28) {
-                Spacer()
+            VStack(spacing: 24) {
+                Spacer(minLength: 8)
 
+                // 대형 ml 입력부: 카드로 감싼 스테퍼 + 입력
                 HStack(spacing: 20) {
                     stepperButton(icon: "minus") { amountML = max(10, amountML - 10) }
 
                     TextField("ml", text: $textValue)
                         .keyboardType(.numberPad)
                         .multilineTextAlignment(.center)
-                        .font(.system(size: 52, weight: .bold, design: .rounded))
+                        .font(.system(size: 64, weight: .heavy, design: .rounded))
                         .monospacedDigit()
-                        .frame(maxWidth: 160)
+                        .foregroundStyle(Color.feed3Ink)
+                        .frame(maxWidth: 180)
                         .onChange(of: textValue) { _, newValue in
                             let digits = newValue.filter(\.isNumber)
                             if let value = Int(digits) {
@@ -48,10 +50,14 @@ struct FormulaSheet: View {
 
                     stepperButton(icon: "plus") { amountML = min(300, amountML + 10) }
                 }
+                .padding(.vertical, 20)
+                .padding(.horizontal, 16)
+                .feed3Card()
 
                 Text("ml")
-                    .font(.subheadline)
+                    .font(.subheadline.weight(.semibold))
                     .foregroundStyle(.secondary)
+                    .tracking(1)
 
                 // 기록 날짜: 기본 '지금'. 토글하면 이전 날짜/시각 지정 가능.
                 VStack(spacing: 8) {
@@ -110,11 +116,11 @@ struct FormulaSheet: View {
             textValue = String(amountML)
         }) {
             Image(systemName: icon)
-                .font(.title2.weight(.semibold))
+                .font(.title2.weight(.bold))
                 .frame(width: 64, height: 64)
         }
         .buttonStyle(.plain)
-        .background(Color.feed3Accent.opacity(0.10), in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.feed3AccentTint, in: Circle())
         .foregroundStyle(Color.feed3Accent)
     }
 
