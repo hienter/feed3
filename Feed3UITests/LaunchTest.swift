@@ -35,6 +35,13 @@ final class LaunchTest: XCTestCase {
                 launched = true
                 break
             }
+            // 실패 원인 진단: 계층 텍스트 + 스크린샷을 xcresult에 남긴다
+            print("Feed3UIT-diag: launchCount=\(app.launchArguments) state=\(app.state.rawValue)")
+            print("Feed3UIT-diag debugDescription:\n\(app.debugDescription.prefix(3000))")
+            let shot = XCTAttachment(screenshot: app.screenshot())
+            shot.name = "launch-failure"
+            shot.lifetime = .keepAlways
+            add(shot)
             app.terminate()
             sleep(3)
         }
