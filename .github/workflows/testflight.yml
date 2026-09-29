@@ -43,13 +43,19 @@ jobs:
           mkdir -p ~/.appstoreconnect/private_keys
           echo -n "$ASC_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
           echo "$ASC_ISSUER_ID" > ~/.appstoreconnect/feed3_issuer_id
+          mkdir -p ~/Library/Preferences
 
       - name: Build archive
         env:
           RUN_NUMBER: ${{ github.run_number }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
           set -o pipefail
           xcodebuild archive \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8 \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuer "$ASC_ISSUER_ID" \
             -project Feed3.xcodeproj \
             -scheme Feed3 \
             -configuration Release \
@@ -87,6 +93,9 @@ jobs:
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
             -exportPath build/ipa \
             -allowProvisioningUpdates \
+            -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8 \
+            -authenticationKeyID "$ASC_KEY_ID" \
+            -authenticationKeyIssuer "$ASC_ISSUER_ID" \
             2>&1 | xcbeautify
 
       - name: Upload to TestFlight
