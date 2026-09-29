@@ -34,13 +34,15 @@ jobs:
           security list-keychain -d user -s "$KEYCHAIN_PATH"
           security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
-      - name: Install provisioning profile
+      - name: Setup App Store Connect API key for xcodebuild -allowProvisioningUpdates
         env:
-          PROVISIONING_PROFILE_BASE64: ${{ secrets.PROVISIONING_PROFILE_BASE64 }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
         run: |
-          PP_DIR=~/Library/MobileDevice/Provisioning\ Profiles
-          mkdir -p "$PP_DIR"
-          echo -n "$PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PP_DIR/feed3.mobileprovision"
+          mkdir -p ~/.appstoreconnect/private_keys
+          echo -n "$ASC_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
+          echo "$ASC_ISSUER_ID" > ~/.appstoreconnect/feed3_issuer_id
 
       - name: Build archive
         env:
@@ -53,33 +55,40 @@ jobs:
             -configuration Release \
             -archivePath build/Feed3.xcarchive \
             -destination "generic/platform=iOS" \
+            -allowProvisioningUpdates \
             DEVELOPMENT_TEAM=SME94477V2 \
-            CODE_SIGN_STYLE=Manual \
-            PROVISIONING_PROFILE_SPECIFIER="Feed3 Distribution" \
+            CODE_SIGN_STYLE=Automatic \
             CODE_SIGN_IDENTITY="Apple Distribution" \
             CURRENT_PROJECT_VERSION=$RUN_NUMBER \
             2>&1 | xcbeautify
 
       - name: Export IPA
         env:
-          EXPORT_PLIST: ${{ secrets.EXPORT_PLIST }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
         run: |
-          echo "$EXPORT_PLIST" > $RUNNER_TEMP/ExportOptions.plist
+          cat > $RUNNER_TEMP/ExportOptions.plist <<'PLIST'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>SME94477V2</string>
+            <key>signingStyle</key>
+            <string>automatic</string>
+            <key>uploadSymbols</key>
+            <true/>
+          </dict>
+          </plist>
+          PLIST
           xcodebuild -exportArchive \
             -archivePath build/Feed3.xcarchive \
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
             -exportPath build/ipa \
+            -allowProvisioningUpdates \
             2>&1 | xcbeautify
-
-      - name: Setup App Store Connect API key for altool
-        env:
-          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
-          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
-          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
-        run: |
-          mkdir -p ~/.appstoreconnect/private_keys
-          echo -n "$ASC_KEY_P8" > ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8
-          echo "$ASC_ISSUER_ID" > ~/.appstoreconnect/feed3_issuer_id
 
       - name: Upload to TestFlight
         env:
