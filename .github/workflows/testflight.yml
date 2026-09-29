@@ -55,7 +55,7 @@ jobs:
           xcodebuild archive \
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8 \
             -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuer "$ASC_ISSUER_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             -project Feed3.xcodeproj \
             -scheme Feed3 \
             -configuration Release \
@@ -95,7 +95,7 @@ jobs:
             -allowProvisioningUpdates \
             -authenticationKeyPath ~/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8 \
             -authenticationKeyID "$ASC_KEY_ID" \
-            -authenticationKeyIssuer "$ASC_ISSUER_ID" \
+            -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
             2>&1 | xcbeautify
 
       - name: Upload to TestFlight
