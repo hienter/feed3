@@ -21,15 +21,56 @@
 			remoteGlobalIDString = F3A000000000000000000007;
 			remoteInfo = Feed3;
 		};
+		F3A000000000000000000047 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F3A00000000000000000000B /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F3A00000000000000000003C;
+			remoteInfo = DDayWidget;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXBuildFile section */
+		F3A000000000000000000041 /* DDayWidget.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = F3A00000000000000000003E /* DDayWidget.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnEmbed, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		F3A000000000000000000040 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				F3A000000000000000000041 /* DDayWidget.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		F3A000000000000000000030 /* Feed3UITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Feed3UITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F3A000000000000000000005 /* Feed3.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Feed3.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F3A000000000000000000006 /* Feed3Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Feed3Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F3A00000000000000000003E /* DDayWidget.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = DDayWidget.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		F3A00000000000000000003F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = Info.plist; path = DDayWidget/Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		F3A000000000000000000042 /* SharedKit */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {};
+			explicitFolders = ();
+			path = SharedKit;
+			sourceTree = "<group>";
+		};
+		F3A000000000000000000043 /* DDayWidget */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			explicitFileTypes = {};
+			explicitFolders = ();
+			path = DDayWidget;
+			sourceTree = "<group>";
+		};
 		F3A000000000000000000001 /* Feed3 */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			explicitFileTypes = {};
@@ -75,8 +116,10 @@
 			isa = PBXGroup;
 			children = (
 				F3A000000000000000000001 /* Feed3 */,
+				F3A000000000000000000042 /* SharedKit */,
 				F3A000000000000000000002 /* Feed3Tests */,
 				F3A000000000000000000031 /* Feed3UITests */,
+				F3A000000000000000000043 /* DDayWidget */,
 				F3A000000000000000000004 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -87,6 +130,7 @@
 				F3A000000000000000000005 /* Feed3.app */,
 				F3A000000000000000000006 /* Feed3Tests.xctest */,
 				F3A000000000000000000030 /* Feed3UITests.xctest */,
+				F3A00000000000000000003E /* DDayWidget.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -101,13 +145,16 @@
 				F3A000000000000000000008 /* Sources */,
 				F3A000000000000000000009 /* Frameworks */,
 				F3A00000000000000000000A /* Resources */,
+				F3A000000000000000000040 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				F3A000000000000000000044 /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
 				F3A000000000000000000001 /* Feed3 */,
+				F3A000000000000000000042 /* SharedKit */,
 			);
 			name = Feed3;
 			packageProductDependencies = (
@@ -162,6 +209,29 @@
 			productReference = F3A000000000000000000030 /* Feed3UITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
+		F3A00000000000000000003C /* DDayWidget */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = F3A00000000000000000004A /* Build configuration list for PBXNativeTarget "DDayWidget" */;
+			buildPhases = (
+				F3A00000000000000000003D /* Sources */,
+				F3A000000000000000000045 /* Frameworks */,
+				F3A000000000000000000046 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				F3A000000000000000000043 /* DDayWidget */,
+				F3A000000000000000000042 /* SharedKit */,
+			);
+			name = DDayWidget;
+			packageProductDependencies = (
+			);
+			productName = DDayWidget;
+			productReference = F3A00000000000000000003E /* DDayWidget.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -183,6 +253,9 @@
 						CreatedOnToolsVersion = 16.0;
 						TestTargetID = F3A000000000000000000007;
 					};
+					F3A00000000000000000003C = {
+						CreatedOnToolsVersion = 16.0;
+					};
 				};
 			};
 			buildConfigurationList = F3A000000000000000000018 /* Build configuration list for PBXProject "Feed3" */;
@@ -202,6 +275,7 @@
 				F3A000000000000000000007 /* Feed3 */,
 				F3A00000000000000000000C /* Feed3Tests */,
 				F3A000000000000000000033 /* Feed3UITests */,
+				F3A00000000000000000003C /* DDayWidget */,
 			);
 		};
 /* End PBXProject section */
@@ -261,6 +335,30 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXSourcesBuildPhase for DDayWidget (appended after main section to preserve canonical section order) */
+		F3A00000000000000000003D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F3A000000000000000000045 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F3A000000000000000000046 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase for DDayWidget */
+
 /* Begin PBXTargetDependency section */
 		F3A000000000000000000011 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -272,9 +370,72 @@
 			target = F3A000000000000000000007 /* Feed3 */;
 			targetProxy = F3A000000000000000000032 /* PBXContainerItemProxy */;
 		};
+		F3A000000000000000000044 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F3A00000000000000000003C /* DDayWidget */;
+			targetProxy = F3A000000000000000000047 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXSourcesBuildPhase section */
+
 /* Begin XCBuildConfiguration section */
+		F3A00000000000000000003B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = DDayWidget/DDayWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DDayWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DDayWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.hienter.feed3.DDayWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		F3A000000000000000000049 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = DDayWidget/DDayWidget.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = DDayWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = DDayWidget;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = com.hienter.feed3.DDayWidget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
 		F3A000000000000000000012 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -405,13 +566,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CODE_SIGN_ENTITLEMENTS = Feed3/Feed3.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Feed3/DDay.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Feed3;
+				INFOPLIST_KEY_CFBundleDisplayName = "디데이";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -434,13 +595,13 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
-				CODE_SIGN_ENTITLEMENTS = Feed3/Feed3.entitlements;
+				CODE_SIGN_ENTITLEMENTS = Feed3/DDay.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = Feed3;
+				INFOPLIST_KEY_CFBundleDisplayName = "디데이";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -553,6 +714,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		F3A00000000000000000004A /* Build configuration list for PBXNativeTarget "DDayWidget" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F3A00000000000000000003B /* Debug */,
+				F3A000000000000000000049 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		F3A000000000000000000018 /* Build configuration list for PBXProject "Feed3" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
