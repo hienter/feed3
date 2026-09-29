@@ -387,7 +387,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DDayWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DDayWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
@@ -415,7 +415,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = DDayWidget/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = DDayWidget;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";

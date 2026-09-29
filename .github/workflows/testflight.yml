@@ -58,7 +58,6 @@ jobs:
             -allowProvisioningUpdates \
             DEVELOPMENT_TEAM=SME94477V2 \
             CODE_SIGN_STYLE=Automatic \
-            CODE_SIGN_IDENTITY="Apple Distribution" \
             CURRENT_PROJECT_VERSION=$RUN_NUMBER \
             2>&1 | xcbeautify
 
